@@ -7,11 +7,26 @@ if (!pocketBaseUrl) {
   throw new Error("VITE_POCKETBASE_URL is required");
 }
 
-const pb = new PocketBase(pocketBaseUrl);
+export const pb = new PocketBase(pocketBaseUrl);
 
-const useConfiguratorStore = create((set) => ({
+export const useConfiguratorStore = create((set) => ({
   categories: [],
-  currentCategories: null,
+  currentCategory: null,
   assets: [],
-  fetchCategories: async (params) => {},
+
+  fetchCategories: async (params) => {
+    const categories = await pb.collection("CustomizationGroups").getFullList({
+      sort: "+position",
+    });
+    const assets = await pb.collection("CustomizationAssets").getFullList({
+      sort: "-created",
+    });
+    categories.forEach((category) => {
+      category.assets = assets.filter((asset) => asset.group === category.id);
+    });
+
+    set({ categories, currentCategory: categories[0], assets });
+  },
+
+  setCurrentCategory: (category) => set({ currentCategory: category }),
 }));
