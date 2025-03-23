@@ -14,8 +14,9 @@ export const useConfiguratorStore = create((set) => ({
   currentCategory: null,
   assets: [],
   customization: {},
-
-  fetchCategories: async (params) => {
+  download: () => {},
+  setDownload: (download) => set({ download }),
+  fetchCategories: async () => {
     const categories = await pb.collection("CustomizationGroups").getFullList({
       sort: "+position",
     });
@@ -26,11 +27,15 @@ export const useConfiguratorStore = create((set) => ({
     categories.forEach((category) => {
       category.assets = assets.filter((asset) => asset.group === category.id);
       customization[category.name] = {};
+      if (category.startingAsset) {
+        customization[category.name].asset = category.assets.find(
+          (asset) => asset.id === category.startingAsset
+        );
+      }
     });
 
     set({ categories, currentCategory: categories[0], assets, customization });
   },
-
   setCurrentCategory: (category) => set({ currentCategory: category }),
   changeAsset: (category, asset) =>
     set((state) => ({
